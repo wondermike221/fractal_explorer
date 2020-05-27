@@ -1,24 +1,19 @@
-extern crate minifb;
-extern crate rayon;
 mod complex;
 mod coords;
 mod corners;
 mod fractals;
 mod utils;
 
-use minifb::{Key, MouseButton, MouseMode, CursorStyle, Scale, ScaleMode, Window, WindowOptions};
 pub use crate::complex::Complex;
 pub use crate::coords::Coords;
 pub use crate::corners::Corners;
 pub use crate::fractals::mandelbrot::Mandelbrot;
+use minifb::{CursorStyle, Key, MouseButton, MouseMode, Scale, ScaleMode, Window, WindowOptions};
 use std::collections::VecDeque;
-
 
 const DEFAULT_WIDTH: usize = 800;
 const DEFAULT_HEIGHT: usize = 800;
 const GENERATION_INFINITY: u32 = 256;
-
-
 
 fn main() {
     let mut buffer: Vec<u32>;
@@ -48,20 +43,24 @@ fn main() {
     let mut y_max = 1.5f64;
 
     let default_corners = Corners {
-        first: Some(Coords{x: x_min, y: y_min}),
-        second: Some(Coords{x: x_max, y: y_max})
+        first: Some(Coords { x: x_min, y: y_min }),
+        second: Some(Coords { x: x_max, y: y_max }),
     };
 
-    let mandel = Mandelbrot { domain_range: default_corners };
+    let mandel = Mandelbrot {
+        domain_range: default_corners,
+    };
     buffer = mandel.generate_fractal(default_corners);
 
     // We unwrap here as we want this code to exit if it fails
-    window.update_with_buffer(&buffer, DEFAULT_WIDTH, DEFAULT_HEIGHT).unwrap();
+    window
+        .update_with_buffer(&buffer, DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        .unwrap();
     let mut left_mouse_state: MouseState = MouseState::MouseUp;
     let mut corners_history: VecDeque<Corners> = VecDeque::with_capacity(15);
     let mut corners: Corners = Corners {
         first: None,
-        second: None
+        second: None,
     };
     while window.is_open() && !window.is_key_down(Key::Escape) {
         window.get_mouse_pos(MouseMode::Discard).map(|(x, y)| {
@@ -72,14 +71,14 @@ fn main() {
 
             if window.get_mouse_down(MouseButton::Left) {
                 if left_mouse_state == MouseState::MouseUp {
-                    corners.first = Some(Coords{x:real, y:imag});
+                    corners.first = Some(Coords { x: real, y: imag });
                 }
                 left_mouse_state = MouseState::MouseDown;
             } else {
                 if left_mouse_state == MouseState::MouseDown {
                     left_mouse_state = MouseState::MouseUp;
                     if corners_history.len() <= 15 {
-                        corners.second = Some(Coords{x:real, y:imag});
+                        corners.second = Some(Coords { x: real, y: imag });
                         let unpacked_corners = corners.unpack();
                         x_min = unpacked_corners.0;
                         y_min = unpacked_corners.1;
@@ -88,7 +87,9 @@ fn main() {
                         buffer = mandel.generate_fractal(corners);
 
                         corners_history.push_front(corners);
-                        window.update_with_buffer(&buffer, DEFAULT_WIDTH, DEFAULT_HEIGHT).unwrap();
+                        window
+                            .update_with_buffer(&buffer, DEFAULT_WIDTH, DEFAULT_HEIGHT)
+                            .unwrap();
                     }
                 }
             }
@@ -105,9 +106,10 @@ fn main() {
                 x_max = unpacked_corners.2;
                 y_max = unpacked_corners.3;
                 buffer = mandel.generate_fractal(default_corners);
-                window.update_with_buffer(&buffer, DEFAULT_WIDTH, DEFAULT_HEIGHT).unwrap();
+                window
+                    .update_with_buffer(&buffer, DEFAULT_WIDTH, DEFAULT_HEIGHT)
+                    .unwrap();
             }
-
         });
 
         window.update();
@@ -117,10 +119,8 @@ fn main() {
 #[derive(Debug, Copy, Clone, PartialEq)]
 enum MouseState {
     MouseDown,
-    MouseUp
+    MouseUp,
 }
-
-
 
 fn fill(n: u32) -> u32 {
     if GENERATION_INFINITY == n {
@@ -129,4 +129,3 @@ fn fill(n: u32) -> u32 {
         return n * 32 % 255;
     }
 }
-
